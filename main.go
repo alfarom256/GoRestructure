@@ -1,14 +1,13 @@
 package main
 
 import (
+	"GoRestructure/GRLibAST"
 	"fmt"
 	"github.com/akamensky/argparse"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
-	"GoRestructure/GRLibAST"
-	"GoRestructure/GRLibFile"
 )
 
 func main() {
@@ -43,20 +42,19 @@ func main() {
 		tmp := pList[i]
 		files := tmp.Files
 		for f := range files {
-			GRLibFile.GenSrcFromFile(files[f].Name, tmp.Name, *outputPath)
+			GRLibAST.GenSrcFromFile(files[f].Name, tmp.Name, *outputPath)
 		}
 
 		for j := range tmp.SubPackages {
 			tmpSub := tmp.SubPackages[j]
 			files := tmpSub.Files
 			for f := range files {
-				GRLibFile.GenSrcFromFile(files[f].Name, tmpSub.Name, *outputPath)
+				GRLibAST.GenSrcFromFile(files[f].Name, tmpSub.Name, *outputPath)
 			}
 		}
 	}
 	fSplit := strings.Split(*fPath, string(os.PathSeparator))
 	fName := fSplit[len(fSplit)-1]
 	// lastly, generate the source for the main file
-	GRLibFile.GenSrcFromFile(*fPath, fName, *outputPath)
+	GRLibAST.GenSrcFromFile(*fPath, fName, *outputPath)
 }
-

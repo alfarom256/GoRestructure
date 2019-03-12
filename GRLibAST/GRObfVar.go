@@ -1,6 +1,7 @@
 package GRLibAST
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
 	"math/rand"
@@ -9,6 +10,7 @@ import (
 
 const charset = "abcdefghijklmnopqrstuvwxyz" +
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+
 var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 type ObfVar struct {
@@ -16,14 +18,27 @@ type ObfVar struct {
 }
 
 func VarsFromFunc(fDecl *ast.FuncDecl) []*ast.Ident {
-	statementList := fDecl.Body.List
 	var decls []*ast.Ident
+	funcFList := fDecl.Type.Params.List // this is a field list of the function  []*Field
+	// we need to extract the parameters from the function declaration and rename them accordingly
+	var funcParamNames []string
+	for fList := range funcFList {
+		tempNames := funcFList[fList].Names
+		for i := range tempNames {
+			fmt.Printf("FOUND PARAMETER FOR FUNC %s: %s\n", fDecl.Name, tempNames[i].Name)
+			funcParamNames = append(funcParamNames, tempNames[i].Name)
+			decls = append(decls, tempNames[i]) // add function parameters to all declaration idents in function
+		}
+	}
+	// now that we have a list of function parameters, let's add those to the map
+
+	statementList := fDecl.Body.List
 	for i := range statementList {
 		tmp := statementList[i]
 		assign, ok := tmp.(*ast.AssignStmt)
 		if ok {
-			if assign.Tok == token.DEFINE || assign.Tok == token.VAR{
-				for i := range assign.Lhs{
+			if assign.Tok == token.DEFINE || assign.Tok == token.VAR {
+				for i := range assign.Lhs {
 					decls = append(decls, assign.Lhs[i].(*ast.Ident))
 				}
 			}
@@ -45,15 +60,15 @@ func VarsFromFunc(fDecl *ast.FuncDecl) []*ast.Ident {
 	return decls
 }
 
-func ChangeVarsFuncAST(inAST *ast.File, varMap map[*ast.FuncDecl][]*ast.Ident) *ast.File{
+func ChangeVarsFuncAST(inAST *ast.File, varMap map[*ast.FuncDecl][]*ast.Ident) *ast.File {
 	var fList []*ast.FuncDecl
-	for k, v := range varMap{
+	for k, v := range varMap {
 		fList = append(fList, k)
 		_ = v
 	}
-	ast.Inspect(inAST, func (n ast.Node) bool{
+	ast.Inspect(inAST, func(n ast.Node) bool {
 		funcDecl, ok := n.(*ast.FuncDecl)
-		if ok && funcContains(fList, funcDecl){
+		if ok && funcContains(fList, funcDecl) {
 			changedVars := changeVarsInFunction(inAST, varMap[funcDecl])
 			if changedVars == nil {
 				return false
@@ -72,9 +87,9 @@ func changeVarsInFunction(inAST *ast.File, identList []*ast.Ident) map[string]st
 		retval[identList[i].Name] = varString()
 	}
 	ast.Inspect(inAST,
-		func (n ast.Node) bool{
+		func(n ast.Node) bool {
 			ident, ok := n.(*ast.Ident)
-			if ok && identContains(identList, ident){
+			if ok && identContains(identList, ident) {
 				identsToChange = append(identsToChange, ident)
 				return true
 			}
@@ -95,7 +110,7 @@ func stringWithCharset(length int, charset string) string {
 }
 
 func varString() string {
-	return stringWithCharset(rand.Intn(7) + 1, charset)
+	return stringWithCharset(rand.Intn(7)+1, charset)
 }
 func identContains(nArr []*ast.Ident, n *ast.Ident) bool {
 	for i := range nArr {

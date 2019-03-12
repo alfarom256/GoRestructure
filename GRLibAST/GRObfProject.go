@@ -1,18 +1,16 @@
 package GRLibAST
 
 import (
+	"fmt"
 	"go/ast"
-	"strings"
+	"go/parser"
+	"go/token"
+	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
-	"log"
-	"fmt"
-	"go/token"
-	"go/parser"
-	"io/ioutil"
-	"GoRestructure/GRLibFile"
+	"strings"
 )
-
 
 type Package struct {
 	Name        string
@@ -27,7 +25,6 @@ type PackageFile struct {
 	FileAST        *ast.File
 	FileNodeSource *NodeSource
 }
-
 
 func InitLocalPackages(fPath string) []*Package {
 	// this will hold all the package objects for each package we find during parsing
@@ -156,25 +153,19 @@ func packageFromDir(file string) (*Package, bool) {
 				panic(err)
 			}
 
-
 			/*
-			Convert the array of string files into PackageFiles
+				Convert the array of string files into PackageFiles
 
 
-			type PackageFile struct {
-				Name           string
-				FileAST        *ast.Node
-				FileNodeSource *NodeSource
-			}
+				type PackageFile struct {
+					Name           string
+					FileAST        *ast.Node
+					FileNodeSource *NodeSource
+				}
 
 			*/
-			for i := range tmpFiles{
-				tmp := PackageFile{tmpFiles[i], nil, nil}
-				tmp.FileAST = GRLibFile.GetASTFile(tmp.Name)
 
-			}
-			tmpPackage.Files = tmpFiles
-
+			tmpPackage.Files = makePkgFilesFromPathList(tmpFiles)
 			tmpPackage.Dirs = tmpDirs
 
 			for i := range tmpPackage.Dirs {
@@ -215,7 +206,7 @@ func packageFromDir(file string) (*Package, bool) {
 						for i := range tmpSubPackage.Dirs {
 							tmpSubPackage.Dirs[i] = FixDirPath(tmpSubPackage.Dirs[i])
 						}
-						tmpSubPackage.Files = tmpSubFiles
+						tmpSubPackage.Files = makePkgFilesFromPathList(tmpSubFiles)
 						subPackages = append(subPackages, tmpSubPackage)
 						return nil
 					}
@@ -238,13 +229,12 @@ func packageFromDir(file string) (*Package, bool) {
 	}
 }
 
-func packageFileInit(fname string) *PackageFile{
+func packageFileInit(fname string) *PackageFile {
 	retVal := PackageFile{fname, nil, nil}
 	_ = retVal
 
 	return nil
 }
-
 
 func FixDirPath(f string) string {
 	if string(f[len(f)-1]) != string(os.PathSeparator) {
@@ -270,4 +260,14 @@ func dirsInDirectory(fPath string) ([]string, error) {
 		}
 	}
 	return retVal, nil
+}
+
+func makePkgFilesFromPathList(tmpFiles []string) []PackageFile {
+	tmpPkgFiles := make([]PackageFile, len(tmpFiles))
+	for i := range tmpFiles {
+		tmp := PackageFile{tmpFiles[i], nil, nil}
+		tmp.FileAST = GetASTFile(tmp.Name)
+		tmpPkgFiles[i] = tmp
+	}
+	return tmpPkgFiles
 }

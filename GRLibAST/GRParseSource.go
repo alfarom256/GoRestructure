@@ -1,20 +1,19 @@
-package GRLibFile
+package GRLibAST
 
 import (
-	"strings"
-	"os"
-	"log"
 	"bufio"
-	"go/token"
-	"go/parser"
-	"go/ast"
+	"bytes"
 	"fmt"
+	"go/ast"
+	"go/parser"
 	"go/printer"
-	"GoRestructure/GRLibAST"
-
+	"go/token"
+	"log"
+	"os"
+	"strings"
 )
 
-func GetASTFile(fname string) *ast.File{
+func GetASTFile(fname string) *ast.File {
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, fname, nil, parser.ParseComments)
 	if err != nil {
@@ -31,7 +30,7 @@ func GenSrcFromFile(fPath string, name string, outpath string) bool {
 	fSplit := strings.Split(fPath, string(os.PathSeparator))
 	fName := fSplit[len(fSplit)-1]
 	// create the outpath files
-	newDir := GRLibAST.FixDirPath(outpath) + name
+	newDir := FixDirPath(outpath) + name
 	newFile := newDir + string(os.PathSeparator) + fName
 	_, err := os.Stat(newDir) // see if the file already exists
 	if err != nil {
@@ -45,26 +44,32 @@ func GenSrcFromFile(fPath string, name string, outpath string) bool {
 	}
 	newFileWriter := bufio.NewWriter(f)
 
-	mySource := GRLibAST.NodeSource{}
+	mySource := NodeSource{}
 	fset := token.NewFileSet()
 
-	node := GetASTFile(fName)
-	mySource = *GRLibAST.ParseNodeSource(node)
+	node := GetASTFile(fPath)
+	mySource = *ParseNodeSource(node)
 
 	// carve out a map (table) that will store a list of Function nodes
 	// the value will be all the ident variables in the function
 	AllVars := make(map[*ast.FuncDecl][]*ast.Ident, len(mySource.FunctionDecl))
 	for i := range mySource.FunctionDecl {
-		tmp := GRLibAST.VarsFromFunc(mySource.FunctionDecl[i])
+		tmp := VarsFromFunc(mySource.FunctionDecl[i])
 		AllVars[mySource.FunctionDecl[i]] = tmp
 	}
 
 	for i := range AllVars {
-		GRLibAST.ChangeVarsFuncAST(node, AllVars)
+		ChangeVarsFuncAST(node, AllVars)
 		_ = i
 	}
-
+	// DEBUG
+	printer.Fprint(os.Stdout, fset, node)
+	// END DEBUG
 	fmt.Printf("WRITING TO FILE: %s\n", newFile)
+
+	var fWriteBuf bytes.Buffer
+	_ = fWriteBuf
 	printer.Fprint(newFileWriter, fset, node)
+
 	return true
 }
