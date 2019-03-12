@@ -229,14 +229,8 @@ func packageFromDir(file string) (*Package, bool) {
 	}
 }
 
-func packageFileInit(fname string) *PackageFile {
-	retVal := PackageFile{fname, nil, nil}
-	_ = retVal
-
-	return nil
-}
-
 func FixDirPath(f string) string {
+	f = filepath.FromSlash(f)
 	if string(f[len(f)-1]) != string(os.PathSeparator) {
 		return f + string(os.PathSeparator)
 	}

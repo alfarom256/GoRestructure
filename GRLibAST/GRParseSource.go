@@ -1,13 +1,13 @@
 package GRLibAST
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/printer"
 	"go/token"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -36,13 +36,14 @@ func GenSrcFromFile(fPath string, name string, outpath string) bool {
 	if err != nil {
 		os.MkdirAll(newDir, os.ModePerm)
 	}
-	f, err := os.Create(newFile)
+
+	err = nil
+	_, err = os.Create(newFile)
 	if err != nil {
 		log.Fatal("Can't create file for writing...")
 		log.Fatal(newFile)
 		panic(err)
 	}
-	newFileWriter := bufio.NewWriter(f)
 
 	mySource := NodeSource{}
 	fset := token.NewFileSet()
@@ -68,8 +69,13 @@ func GenSrcFromFile(fPath string, name string, outpath string) bool {
 	fmt.Printf("WRITING TO FILE: %s\n", newFile)
 
 	var fWriteBuf bytes.Buffer
-	_ = fWriteBuf
-	printer.Fprint(newFileWriter, fset, node)
-
+	printer.Fprint(&fWriteBuf, fset, node)
+	// let's write to the file
+	err = nil
+	err = ioutil.WriteFile(newFile, fWriteBuf.Bytes(), 0644)
+	if err != nil {
+		fmt.Printf("Error writing file %s\n", newFile)
+		panic(err)
+	}
 	return true
 }
