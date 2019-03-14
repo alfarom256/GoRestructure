@@ -25,9 +25,11 @@ func VarsFromFunc(fDecl *ast.FuncDecl) []*ast.Ident {
 	for fList := range funcFList {
 		tempNames := funcFList[fList].Names
 		for i := range tempNames {
-			fmt.Printf("FOUND PARAMETER FOR FUNC %s: %s\n", fDecl.Name, tempNames[i].Name)
-			funcParamNames = append(funcParamNames, tempNames[i].Name)
-			decls = append(decls, tempNames[i]) // add function parameters to all declaration idents in function
+			if tempNames[i].Obj.Kind != ast.Typ && tempNames[i].Obj.Kind != ast.Pkg {
+				fmt.Printf("FOUND PARAMETER FOR FUNC %s: %s\n", fDecl.Name, tempNames[i].Name)
+				funcParamNames = append(funcParamNames, tempNames[i].Name)
+				decls = append(decls, tempNames[i]) // add function parameters to all declaration idents in function
+			}
 		}
 	}
 	// now that we have a list of function parameters, let's add those to the map
@@ -39,7 +41,12 @@ func VarsFromFunc(fDecl *ast.FuncDecl) []*ast.Ident {
 		if ok {
 			if assign.Tok == token.DEFINE || assign.Tok == token.VAR {
 				for i := range assign.Lhs {
-					decls = append(decls, assign.Lhs[i].(*ast.Ident))
+					nilValChk := assign.Lhs[i].(*ast.Ident).Name
+					if nilValChk != "_" {
+						decls = append(decls, assign.Lhs[i].(*ast.Ident))
+					} else {
+						fmt.Printf("Ignoring underscore")
+					}
 				}
 			}
 		}
@@ -51,7 +58,12 @@ func VarsFromFunc(fDecl *ast.FuncDecl) []*ast.Ident {
 				valSpec, ok := genDecl.Specs[0].(*ast.ValueSpec)
 				if ok {
 					for i := range valSpec.Names {
-						decls = append(decls, valSpec.Names[i])
+						nilValChk := valSpec.Names[i].Name
+						if nilValChk != "_" {
+							decls = append(decls, valSpec.Names[i])
+						} else {
+							fmt.Printf("Ignoring underscore")
+						}
 					}
 				}
 			}
@@ -84,12 +96,15 @@ func changeVarsInFunction(inAST *ast.File, identList []*ast.Ident) map[string]st
 	var identsToChange []*ast.Ident
 	var retval = make(map[string]string, len(identList))
 	for i := range identList {
-		retval[identList[i].Name] = varString()
+		// if the thing we're changing is a type, ignore it.
+		if identList[i].Obj.Kind != ast.Typ && identList[i].Obj.Kind != ast.Pkg {
+			retval[identList[i].Name] = varString()
+		}
 	}
 	ast.Inspect(inAST,
 		func(n ast.Node) bool {
 			ident, ok := n.(*ast.Ident)
-			if ok && identContains(identList, ident) {
+			if ok && identContains(identList, ident) && ident.Name != "_" {
 				identsToChange = append(identsToChange, ident)
 				return true
 			}
@@ -110,8 +125,9 @@ func stringWithCharset(length int, charset string) string {
 }
 
 func varString() string {
-	return stringWithCharset(rand.Intn(7)+1, charset)
+	return stringWithCharset(rand.Intn(7)+4, charset)
 }
+
 func identContains(nArr []*ast.Ident, n *ast.Ident) bool {
 	for i := range nArr {
 		if nArr[i].Name == n.Name {

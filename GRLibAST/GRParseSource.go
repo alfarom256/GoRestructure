@@ -25,7 +25,7 @@ func GetASTFile(fname string) *ast.File {
 	return node
 }
 
-func GenSrcFromFile(fPath string, name string, outpath string) bool {
+func GenSrcFromFile(fPath string, name string, outpath string, pList []*GRPackage) bool {
 	// nab the file name
 	fSplit := strings.Split(fPath, string(os.PathSeparator))
 	fName := fSplit[len(fSplit)-1]
@@ -59,15 +59,38 @@ func GenSrcFromFile(fPath string, name string, outpath string) bool {
 		AllVars[mySource.FunctionDecl[i]] = tmp
 	}
 
+	// uuuuuh
+	// todo: find out why this is here??
 	for i := range AllVars {
 		ChangeVarsFuncAST(node, AllVars)
 		_ = i
 	}
-	// DEBUG
-	printer.Fprint(os.Stdout, fset, node)
-	// END DEBUG
-	fmt.Printf("WRITING TO FILE: %s\n", newFile)
 
+	// now we need to get the strings in the file
+	var AllStringASTLits []*ast.BasicLit
+	for i := range mySource.FunctionDecl {
+		tmp := StringsFromFunc(mySource.FunctionDecl[i])
+		for j := range tmp {
+			AllStringASTLits = append(AllStringASTLits, tmp[j])
+		}
+	}
+
+	// make the function Stub handler
+	funcStub := xorStub()
+	// generate the string inlines
+	res := *GenerateStrings(AllStringASTLits, funcStub)
+
+	// swap all of the old values with the new ones
+	for i := range res {
+		tmpBasicLit := AllStringASTLits[i]
+		tmpBasicLit.Kind = token.FUNC
+		tmpBasicLit.Value = res[i].Stub
+	}
+
+	// now add the stub the package
+	node = AppendStub(node, fset, funcStub)
+
+	fmt.Printf("WRITING TO FILE: %s\n", newFile)
 	var fWriteBuf bytes.Buffer
 	printer.Fprint(&fWriteBuf, fset, node)
 	// let's write to the file

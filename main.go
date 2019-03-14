@@ -36,25 +36,26 @@ func main() {
 	}
 
 	pList := GRLibAST.InitLocalPackages(*fPath)
+
 	// pList now contains an entire hierarchy of Golang Packages in the local directory
 	// so for every package in the list, we're gonna generate a new source
 	for i := range pList {
 		tmp := pList[i]
 		files := tmp.Files
 		for f := range files {
-			GRLibAST.GenSrcFromFile(files[f].Name, tmp.Name, *outputPath)
+			GRLibAST.GenSrcFromFile(files[f].Name, tmp.Name, *outputPath, pList)
 		}
 
 		for j := range tmp.SubPackages {
 			tmpSub := tmp.SubPackages[j]
 			files := tmpSub.Files
 			for f := range files {
-				GRLibAST.GenSrcFromFile(files[f].Name, tmpSub.Name, *outputPath)
+				GRLibAST.GenSrcFromFile(files[f].Name, tmpSub.Name, *outputPath, pList)
 			}
 		}
 	}
 	fSplit := strings.Split(*fPath, string(os.PathSeparator))
 	fName := fSplit[len(fSplit)-1]
 	// lastly, generate the source for the main file
-	GRLibAST.GenSrcFromFile(*fPath, fName, *outputPath)
+	GRLibAST.GenSrcFromFile(*fPath, fName, *outputPath, pList)
 }

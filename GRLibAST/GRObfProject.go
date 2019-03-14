@@ -12,23 +12,23 @@ import (
 	"strings"
 )
 
-type Package struct {
+type GRPackage struct {
 	Name        string
 	Path        string
-	Files       []PackageFile
+	Files       []GRPackageFile
 	Dirs        []string
-	SubPackages []Package
+	SubPackages []GRPackage
 }
 
-type PackageFile struct {
+type GRPackageFile struct {
 	Name           string
 	FileAST        *ast.File
 	FileNodeSource *NodeSource
 }
 
-func InitLocalPackages(fPath string) []*Package {
+func InitLocalPackages(fPath string) []*GRPackage {
 	// this will hold all the package objects for each package we find during parsing
-	var preParsePackages []*Package
+	var preParsePackages []*GRPackage
 
 	// this holds the
 	// TODO: add an ignore option maybe?
@@ -126,8 +126,8 @@ func parsePackageFromFile(file string) (string, error) {
 	return tmp, nil
 }
 
-func packageFromDir(file string) (*Package, bool) {
-	var tmpPackage *Package
+func packageFromDir(file string) (*GRPackage, bool) {
+	var tmpPackage *GRPackage
 	src, err := os.Stat(file)
 	if err == nil {
 		if src.IsDir() && file[0] != '.' {
@@ -137,7 +137,7 @@ func packageFromDir(file string) (*Package, bool) {
 			name := fileSplit[len(fileSplit)-2]
 
 			// make a new temp package object
-			tmpPackage = &Package{name, file, nil, nil, nil}
+			tmpPackage = &GRPackage{name, file, nil, nil, nil}
 
 			// get the Files in the directory
 			tmpFiles, err := filesInDirectory(FixDirPath(file))
@@ -157,7 +157,7 @@ func packageFromDir(file string) (*Package, bool) {
 				Convert the array of string files into PackageFiles
 
 
-				type PackageFile struct {
+				type GRPackageFile struct {
 					Name           string
 					FileAST        *ast.Node
 					FileNodeSource *NodeSource
@@ -174,8 +174,8 @@ func packageFromDir(file string) (*Package, bool) {
 
 			// now that we have populated all the other information, let's scan each directory
 			// and search for Files who's package names are equal to the directory Name
-			// once we do this, we should end up with a tree-like structure of *Package
-			var subPackages []Package
+			// once we do this, we should end up with a tree-like structure of *GRPackage
+			var subPackages []GRPackage
 
 			// for every directory within
 			for i := range tmpPackage.Dirs {
@@ -186,7 +186,7 @@ func packageFromDir(file string) (*Package, bool) {
 					if f.IsDir() && isPackage(path) { // we got a winner
 
 						// make a new package
-						tmpSubPackage := Package{"", path, nil, nil, nil}
+						tmpSubPackage := GRPackage{"", path, nil, nil, nil}
 						tmp_name := strings.Split(path, string(os.PathSeparator))
 						tmpSubPackage.Name = tmp_name[len(tmp_name)-2]
 						tmpSubFiles, err := filesInDirectory(file + string(os.PathSeparator))
@@ -256,10 +256,10 @@ func dirsInDirectory(fPath string) ([]string, error) {
 	return retVal, nil
 }
 
-func makePkgFilesFromPathList(tmpFiles []string) []PackageFile {
-	tmpPkgFiles := make([]PackageFile, len(tmpFiles))
+func makePkgFilesFromPathList(tmpFiles []string) []GRPackageFile {
+	tmpPkgFiles := make([]GRPackageFile, len(tmpFiles))
 	for i := range tmpFiles {
-		tmp := PackageFile{tmpFiles[i], nil, nil}
+		tmp := GRPackageFile{tmpFiles[i], nil, nil}
 		tmp.FileAST = GetASTFile(tmp.Name)
 		tmpPkgFiles[i] = tmp
 	}
