@@ -1,8 +1,8 @@
 package GRLibAST
 
 import (
-	"go/ast"
 	"GoRestructure/GRLibUtil"
+	"go/ast"
 )
 
 type NodeSource struct {
@@ -10,11 +10,9 @@ type NodeSource struct {
 	Values       []*ast.ValueSpec  // consts, =
 	Literals     []*ast.BasicLit   // "asdf", 1234, 0xFFFFD00D
 	Imports      []*ast.ImportSpec // all the Imports
-	FunctionDecl []*ast.FuncDecl // function declarations
-	root *ast.Node // pointer to the root node of the AST
+	FunctionDecl []*ast.FuncDecl   // function declarations
+	root         *ast.Node         // pointer to the root node of the AST
 }
-
-
 
 func ParseNodeSource(node ast.Node) *NodeSource {
 	retVal := NodeSource{}
@@ -68,4 +66,3 @@ func ParseNodeSource(node ast.Node) *NodeSource {
 	})
 	return &retVal
 }
-

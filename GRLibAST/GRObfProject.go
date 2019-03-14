@@ -29,8 +29,6 @@ type GRPackageFile struct {
 func InitLocalPackages(fPath string) []*GRPackage {
 	// this will hold all the package objects for each package we find during parsing
 	var preParsePackages []*GRPackage
-
-	// this holds the
 	// TODO: add an ignore option maybe?
 	files, err := filesInDirectory(fPath)
 	if err != nil {

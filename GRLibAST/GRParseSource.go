@@ -30,8 +30,13 @@ func GenSrcFromFile(fPath string, name string, outpath string, pList []*GRPackag
 	fSplit := strings.Split(fPath, string(os.PathSeparator))
 	fName := fSplit[len(fSplit)-1]
 	// create the outpath files
-	newDir := FixDirPath(outpath) + name
-	newFile := newDir + string(os.PathSeparator) + fName
+	var newDir string
+	if strings.Contains(name, ".go") {
+		newDir = FixDirPath(outpath)
+	} else {
+		newDir = FixDirPath(outpath) + name + string(os.PathSeparator)
+	}
+	newFile := newDir + fName
 	_, err := os.Stat(newDir) // see if the file already exists
 	if err != nil {
 		os.MkdirAll(newDir, os.ModePerm)
@@ -88,7 +93,7 @@ func GenSrcFromFile(fPath string, name string, outpath string, pList []*GRPackag
 	}
 
 	// now add the stub the package
-	node = AppendStub(node, fset, funcStub)
+	// if it's the main file
 
 	fmt.Printf("WRITING TO FILE: %s\n", newFile)
 	var fWriteBuf bytes.Buffer

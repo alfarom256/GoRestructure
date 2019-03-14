@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"github.com/davecgh/go-spew/spew"
 	"go/ast"
-	"go/parser"
 	"go/printer"
 	"go/token"
 	"golang.org/x/tools/go/ast/astutil"
 	"log"
+	"os"
 	"strings"
 )
 
@@ -30,14 +30,42 @@ type xorStrStruct struct {
 	tmpVarName string
 }
 
+func WriteStubToPackage(pkg GRPackage, outputPath string) bool {
+
+	if string(outputPath[len(outputPath)-1]) != string(os.PathSeparator) {
+		outputPath += string(os.PathSeparator)
+	}
+
+	fname := outputPath + pkg.Name + string(os.PathSeparator) + xorStub().name + ".go" // the whole file to write
+
+	f, err := os.Create(fname)
+	if err != nil {
+		fmt.Printf("ERROR CREATING XOR DECODE STUB FILE")
+		panic(err)
+	}
+	err = nil
+	_, err = f.WriteString(GetStubAsText(pkg.Name))
+	if err != nil {
+		fmt.Printf("ERROR WRITING XOR DECODE STUB TO PKGs")
+		panic(err)
+	}
+	_ = f.Close()
+	return true
+}
+
+func GetStubAsText(pkgName string) string {
+	retVal := "package " + pkgName + "\n"
+	retVal += "import \"hex\"\n" + xorStub().function_stub
+	return retVal
+}
+
 func xorStub() stringObfStub {
 	codeFuncStub := `
-func obfs(s []byte, k []byte) []byte {
+func obfs(s []byte, k []byte) string {
 	decoded_str, err := hex.DecodeString(string(s))
 	decoded_key, err := hex.DecodeString(string(k))
 
 	if err != nil {
-		log.Fatal(err)
 		panic(err)
 	}
 
@@ -45,37 +73,40 @@ func obfs(s []byte, k []byte) []byte {
 	for i := range decoded_key {
 		ret_val[i] = decoded_str[i] ^ decoded_key[i]
 	}
-	return ret_val
+	retStr := strings.Trim(string(ret_val), string(0x0))
+	return retStr
 }
 `
-	function_call_fmt := "string(obfs([]byte(\"%x\"),[]byte(\"%s\")))"
+	function_call_fmt := "obfs([]byte(\"%x\"),[]byte(\"%s\"))"
 	name := "obfs"
 	var argc uint8 = 2
 	return stringObfStub{argc, name, codeFuncStub, function_call_fmt}
 }
 
-func AppendStub(inAst *ast.File, fset *token.FileSet, s stringObfStub) *ast.File {
+func AppendStub(fName string, outPath string) string {
+	fset := token.NewFileSet()
+	s := xorStub()
+	inAst := GetASTFile(fName)
+	tmpSource := *ParseNodeSource(inAst)
+
 	var srcBuf bytes.Buffer
 	printer.Fprint(&srcBuf, fset, inAst)
 	strSrc := srcBuf.String()
 
-	// check and see if the dec Stub is already in the file
-	mySource := NodeSource{}
-	mySource = *ParseNodeSource(inAst)
-	for i := range mySource.FunctionDecl {
-		localFName := mySource.FunctionDecl[i].Name.Name
-		if localFName == s.name {
-			return nil
+	strSrc += s.function_stub
+	for i := range tmpSource.FunctionDecl {
+		if tmpSource.FunctionDecl[i].Name.Name == s.name {
+			return outPath + fName
 		}
 	}
-
-	strSrc += s.function_stub
-	ret_val, err := parser.ParseFile(fset, "", strSrc, parser.ParseComments)
+	f, err := os.Create(outPath)
 	if err != nil {
-		// freak the fuck out
+		fmt.Printf("ERROR IN APPENDING TO BUILD TARGET FILE")
 		panic(err)
 	}
-	return ret_val
+	f.WriteString(strSrc)
+	_ = f.Close()
+	return outPath + fName
 }
 
 // Strings are literals
