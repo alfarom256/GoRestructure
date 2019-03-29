@@ -116,7 +116,7 @@ func changeVarsInFunction(inAST *ast.File, identList []*ast.Ident) map[string]st
 	return retval
 }
 
-func stringWithCharset(length int, charset string) string {
+func StringWithCharset(length int, charset string) string {
 	b := make([]byte, length)
 	for i := range b {
 		b[i] = charset[seededRand.Intn(len(charset))]
@@ -125,7 +125,7 @@ func stringWithCharset(length int, charset string) string {
 }
 
 func varString() string {
-	return stringWithCharset(rand.Intn(7)+4, charset)
+	return StringWithCharset(rand.Intn(7)+4, charset)
 }
 
 func identContains(nArr []*ast.Ident, n *ast.Ident) bool {

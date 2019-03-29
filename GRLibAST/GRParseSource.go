@@ -3,6 +3,7 @@ package GRLibAST
 import (
 	"bytes"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"go/ast"
 	"go/parser"
 	"go/printer"
@@ -36,6 +37,7 @@ func GenSrcFromFile(fPath string, name string, outpath string, pList []*GRPackag
 	} else {
 		newDir = FixDirPath(outpath) + name + string(os.PathSeparator)
 	}
+
 	newFile := newDir + fName
 	_, err := os.Stat(newDir) // see if the file already exists
 	if err != nil {
@@ -55,6 +57,7 @@ func GenSrcFromFile(fPath string, name string, outpath string, pList []*GRPackag
 
 	node := GetASTFile(fPath)
 	mySource = *ParseNodeSource(node)
+	spew.Dump(mySource)
 
 	// carve out a map (table) that will store a list of Function nodes
 	// the value will be all the ident variables in the function
@@ -88,9 +91,12 @@ func GenSrcFromFile(fPath string, name string, outpath string, pList []*GRPackag
 	// swap all of the old values with the new ones
 	for i := range res {
 		tmpBasicLit := AllStringASTLits[i]
-		tmpBasicLit.Kind = token.FUNC
+		tmpBasicLit.Kind = token.STRING
 		tmpBasicLit.Value = res[i].Stub
 	}
+
+	// let's add our control flow obf
+	AddToNodeTree(node, nil)
 
 	// now add the stub the package
 	// if it's the main file

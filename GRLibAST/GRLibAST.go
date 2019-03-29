@@ -3,6 +3,7 @@ package GRLibAST
 import (
 	"GoRestructure/GRLibUtil"
 	"go/ast"
+	"go/token"
 )
 
 type NodeSource struct {
@@ -11,6 +12,7 @@ type NodeSource struct {
 	Literals     []*ast.BasicLit   // "asdf", 1234, 0xFFFFD00D
 	Imports      []*ast.ImportSpec // all the Imports
 	FunctionDecl []*ast.FuncDecl   // function declarations
+	GenDecl      []*ast.GenDecl    // general declarations (for structs, etc)
 	root         *ast.Node         // pointer to the root node of the AST
 }
 
@@ -35,6 +37,14 @@ func ParseNodeSource(node ast.Node) *NodeSource {
 		if ok {
 			retVal.Imports = append(retVal.Imports, imports)
 			return true
+		}
+
+		genDecls, ok := n.(*ast.GenDecl)
+		if ok {
+			// if it's a type aka struct
+			if genDecls.Tok == token.TYPE {
+				retVal.GenDecl = append(retVal.GenDecl, genDecls)
+			}
 		}
 
 		var importNames []string

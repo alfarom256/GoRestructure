@@ -15,6 +15,25 @@ import (
 	"strings"
 )
 
+/*
+
+Okay so modules need to be able to do a few basic things
+
+EACH module MUST implement the following methods:
+
+1. ItemsFromFunction(fdecl *ast.FuncDecl) []*ast.Node
+2. Transform() ([]*ast.Node, err)
+3. Replace(fdecl *ast.FuncDecl, transformedNodes []*ast.Node) (*ast.FuncDecl, err)
+
+
+4. GetImports() []*ast.GenDecl
+Get the imports required by the transform function
+
+
+5. InsertImports(*ast.File) (*ast.File, err)
+
+*/
+
 type stringObfStub struct {
 	argc              uint8
 	name              string
@@ -60,6 +79,7 @@ func GetStubAsText(pkgName string) string {
 }
 
 func xorStub() stringObfStub {
+	// todo: convert this to AST
 	codeFuncStub := `
 func obfs(s []byte, k []byte) string {
 	decoded_str, err := hex.DecodeString(string(s))
@@ -77,7 +97,9 @@ func obfs(s []byte, k []byte) string {
 	return retStr
 }
 `
+	// todo: convert this to AST
 	function_call_fmt := "obfs([]byte(\"%x\"),[]byte(\"%s\"))"
+	// this is fine
 	name := "obfs"
 	var argc uint8 = 2
 	return stringObfStub{argc, name, codeFuncStub, function_call_fmt}
