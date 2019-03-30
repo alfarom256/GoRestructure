@@ -1,6 +1,7 @@
 package GRLibAST
 
 import (
+	"GoRestructure/GRLibUtil"
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
@@ -223,7 +224,7 @@ func replaceTempVarStrings(node *ast.File, s []xorStrStruct) *ast.File {
 	//tempFuncNodeList := make([]*ast.BasicLit, len(s))
 	ast.Inspect(node, func(n ast.Node) bool {
 		literal, ok := n.(*ast.BasicLit)
-		if ok && literal.Kind == token.STRING && strContains(origXorStrings, strings.Trim(literal.Value, "\"")) {
+		if ok && literal.Kind == token.STRING && GRLibUtil.StrContains(origXorStrings, strings.Trim(literal.Value, "\"")) {
 			fmt.Printf("FOUND %s\n", literal.Value)
 			stringNodes[idx] = &n
 			idx++
@@ -231,7 +232,7 @@ func replaceTempVarStrings(node *ast.File, s []xorStrStruct) *ast.File {
 		}
 
 		varList, ok := n.(*ast.ValueSpec)
-		if ok && strContains(varNameStrings, varList.Names[0].Name) {
+		if ok && GRLibUtil.StrContains(varNameStrings, varList.Names[0].Name) {
 			fmt.Printf("FOUND CUSTOM VARIABLE NODE: %s\n", varList.Names[0].Name)
 			varNodes[var_idx] = &n
 			nodeTable[varList.Names[0].Name] = &n
@@ -268,7 +269,7 @@ func replaceTempVarStrings(node *ast.File, s []xorStrStruct) *ast.File {
 		func(cursor *astutil.Cursor) bool {
 			tmpNode := cursor.Node()
 			assign, ok := tmpNode.(*ast.ValueSpec)
-			if ok && strContains(varNameStrings, assign.Names[0].Name) {
+			if ok && GRLibUtil.StrContains(varNameStrings, assign.Names[0].Name) {
 				fmt.Printf("Cleaning up variable: %s\n", assign.Names[0].Name)
 				return true
 			}
@@ -293,14 +294,4 @@ func nodeContainsBasicLit(slice []*ast.Node, item *ast.Node, max int) bool {
 		}
 	}
 	return false
-}
-
-func strContains(slice []string, item string) bool {
-	set := make(map[string]struct{}, len(slice))
-	for _, s := range slice {
-		set[s] = struct{}{}
-	}
-
-	_, ok := set[item]
-	return ok
 }
