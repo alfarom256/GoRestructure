@@ -57,7 +57,6 @@ func GenSrcFromFile(fPath string, name string, outpath string, pList []*GRPackag
 
 	node := GetASTFile(fPath)
 	mySource = *ParseNodeSource(node)
-	spew.Dump(mySource)
 
 	// carve out a map (table) that will store a list of Function nodes
 	// the value will be all the ident variables in the function
