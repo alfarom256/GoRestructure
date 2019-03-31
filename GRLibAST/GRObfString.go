@@ -75,7 +75,7 @@ func WriteStubToPackage(pkg GRPackage, outputPath string) bool {
 
 func GetStubAsText(pkgName string) string {
 	retVal := "package " + pkgName + "\n"
-	retVal += "import \"hex\"\n" + xorStub().function_stub
+	retVal += "import \"encoding/hex\"\n" + "import \"strings\"\n" + xorStub().function_stub
 	return retVal
 }
 
@@ -99,7 +99,7 @@ func obfs(s []byte, k []byte) string {
 }
 `
 	// todo: convert this to AST
-	function_call_fmt := "obfs([]byte(\"%x\"),[]byte(\"%s\"))"
+	function_call_fmt := "string(obfs([]byte(\"%x\"),[]byte(\"%s\")))"
 	// this is fine
 	name := "obfs"
 	var argc uint8 = 2

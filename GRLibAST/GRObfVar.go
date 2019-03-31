@@ -62,9 +62,23 @@ func VarsFromFunc(fDecl *ast.FuncDecl) []*ast.Ident {
 						if nilValChk != "_" {
 							decls = append(decls, valSpec.Names[i])
 						} else {
-							fmt.Printf("Ignoring underscore")
+							fmt.Printf("\nIgnoring underscore")
 						}
 					}
+				}
+			}
+		}
+		forRangeDecl, ok := tmp.(*ast.RangeStmt)
+		if ok {
+			keyExpr := forRangeDecl.Key
+			keyIdent, ok := keyExpr.(*ast.Ident)
+			if ok {
+				nilValChk := keyIdent.Name[0]
+				if nilValChk != '_' {
+					fmt.Printf("\nFound For Loop Key")
+					decls = append(decls, keyIdent)
+				} else {
+					fmt.Printf("\nIgnoring underscore")
 				}
 			}
 		}

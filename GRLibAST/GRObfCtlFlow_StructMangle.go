@@ -37,24 +37,9 @@ type Field struct {
 const STRUCT_MAX_FIELDS = 20
 
 type StructMangle struct {
-	Original *ast.Node
-	Mangled  *ast.Node
-
-	/*
-		This map will be structured like so:
-
-		KEY:VAL
-
-		NODE1 --> REPLACEMENT_NODE1
-		NODE6 --> REPLACEMENT_NODE6
-		NODE78 --> REPLACEMENT_NODE78
-		...
-
-		NODE## -- node of the original source to replace with
-		REPLACEMENT_NODE##
-
-	*/
-	NodeMap map[*ast.Node]*ast.Node
+	Name         string
+	FieldCount   int
+	FieldTypeMap map[string]int
 }
 
 func GenerateRandomStruct() *ast.Decl {

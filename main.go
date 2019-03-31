@@ -31,14 +31,7 @@ func main() {
 	*fPath = filepath.FromSlash(*fPath)
 	*outputPath = filepath.FromSlash(*outputPath)
 	pList := GRLibAST.InitLocalPackages(*fPath)
-	for i := range // get the arguments we need from the user
-	// In case of error print error and print usage
-	// This can also be done by passing -h or --help flags
-	// normalize the fucking paths
-	// pList now contains an entire hierarchy of Golang Packages in the local directory
-	// so for every package in the list, we're gonna generate a new source
-	// lastly, generate the source for the main file
-	pList {
+	for i := range pList {
 		tmp := pList[i]
 		files := tmp.Files
 		for f := range files {
