@@ -1,4 +1,4 @@
-package GRLibGen
+package GRLibGenerate
 
 import (
 	"fmt"

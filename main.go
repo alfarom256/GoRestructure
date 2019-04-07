@@ -28,9 +28,11 @@ func main() {
 		fmt.Printf("Can't find file %s on the system...", *fPath)
 		panic(err)
 	}
+
 	*fPath = filepath.FromSlash(*fPath)
 	*outputPath = filepath.FromSlash(*outputPath)
 	pList := GRLibAST.InitLocalPackages(*fPath)
+
 	for i := range pList {
 		tmp := pList[i]
 		files := tmp.Files

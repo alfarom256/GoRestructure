@@ -1,6 +1,7 @@
 package GRLibAST
 
 import (
+	"GoRestructure/GRLibGenerate"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -9,31 +10,6 @@ import (
 	"math/rand"
 )
 
-/*
-
-type StructType struct {
-        Struct     token.Pos  // position of "struct" keyword
-        Fields     *FieldList // list of field declarations
-        Incomplete bool       // true if (source) fields are missing in the Fields list
-}
-
-FIELDS
-type FieldList struct {
-        Opening token.Pos // position of opening parenthesis/brace, if any
-        List    []*Field  // field list; or nil
-        Closing token.Pos // position of closing parenthesis/brace, if any
-}
-
-LIST
-type Field struct {
-        Doc     *CommentGroup // associated documentation; or nil
-        Names   []*Ident      // field/method/parameter names; or nil
-        Type    Expr          // field/method/parameter type
-        Tag     *BasicLit     // field tag; or nil
-        Comment *CommentGroup // line comments; or nil
-}
-
-*/
 const STRUCT_MAX_FIELDS = 20
 
 type StructMangle struct {
@@ -58,7 +34,7 @@ type %s struct{
 	for i := range newFieldList {
 		_ = i
 		varName := StringWithCharset(10, charset)
-		varType := "int"
+		varType := GRLibGenerate.GenerateRandomType().Value
 		vars += varName + " " + varType + "\n"
 	}
 	structString := fmt.Sprintf(stringTemplate, structName, vars)
@@ -88,45 +64,3 @@ func AddToNodeTree(original *ast.File, nodeSwapMap map[*ast.Node]*ast.Node) *ast
 	original.Decls = newDecls
 	return original
 }
-
-/*
- type RandomAA struct {
-    a int
-    b byte
-    c *string
-    ...
-}
-type RandomAB struct {
-    a rune
-    b uint32
-    c map[int]int
-    ...
-}
-
-for control flow obfuscation
-
-take a simple main funciton
-
-before
-func main(){
-    fmt.Println("Hello")
-    fmt.Println("World")
-}
-
-after
-
-
-type RandomAA struct {...}
-type RandomAB struct {...}
-func main(){
-   local_a := RandomAA{...} // fill with "random" junk
-   local_b := RandomAB{...} // fill with "random" junk
-   for iter := range ... {
-         if (local_a.something < DO SOME MATH HERE > local_b.something){
-             fmt.Println("Hello")
-         } else if ( same thing as above ) {
-             fmt.Println("World")
-         }
-    }
-}
-*/
