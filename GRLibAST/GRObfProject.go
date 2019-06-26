@@ -26,6 +26,14 @@ type GRPackageFile struct {
 	FileNodeSource *NodeSource
 }
 
+func RenderFunctions(allPackages []*GRPackage) [][]*GRFunc {
+	return GetAllFunctions(allPackages)
+}
+
+func FindUsagesInPackage(allPackages []*GRPackage, allFunctions [][]*GRFunc) GRFuncMap {
+	return FindAllUsagesInPackage(allPackages, allFunctions)
+}
+
 func InitLocalPackages(fPath string) []*GRPackage {
 	// this will hold all the package objects for each package we find during parsing
 	var preParsePackages []*GRPackage

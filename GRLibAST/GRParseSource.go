@@ -59,6 +59,7 @@ func GenSrcFromFile(fPath string, name string, outpath string, pList []*GRPackag
 
 	// carve out a map (table) that will store a list of Function nodes
 	// the value will be all the ident variables in the function
+
 	AllVars := make(map[*ast.FuncDecl][]*ast.Ident, len(mySource.FunctionDecl))
 	for i := range mySource.FunctionDecl {
 		tmp := VarsFromFunc(mySource.FunctionDecl[i])
