@@ -11,7 +11,14 @@ import (
 )
 
 func main() {
-	argParser := argparse.NewParser("GoObfuscate", "A proof of concept golang obfuscation tool")
+	art := `
+
+            ENTER THE WIRED
+
+                GoNavi
+`
+	println(art)
+	argParser := argparse.NewParser("GoNavi", "A proof of concept golang obfuscation tool")
 	fPath := argParser.String("f", "file", &argparse.Options{Required: true, Help: "File to obfuscate"})
 	outputPath := argParser.String("o", "output-path", &argparse.Options{Required: true, Help: "Output path"})
 	err := argParser.Parse(os.Args)
@@ -28,11 +35,9 @@ func main() {
 		fmt.Printf("Can't find file %s on the system...", *fPath)
 		panic(err)
 	}
-
 	*fPath = filepath.FromSlash(*fPath)
 	*outputPath = filepath.FromSlash(*outputPath)
 	pList := GRLibAST.InitLocalPackages(*fPath)
-
 	for i := range pList {
 		tmp := pList[i]
 		files := tmp.Files
@@ -45,10 +50,14 @@ func main() {
 			files := tmpSub.Files
 			for f := range files {
 				GRLibAST.GenSrcFromFile(files[f].Name, tmpSub.Name, *outputPath, pList)
+				GRLibAST.RenderFunctions(pList)
 				GRLibAST.WriteStubToPackage(tmpSub, *outputPath)
 			}
 		}
 	}
+	allFunctions := GRLibAST.RenderFunctions(pList)
+	// this should work, just make sure you're parsing the right type of ast node,, inspect the AST for a callexpr again
+	GRLibAST.FindAllUsagesInPackage(pList, allFunctions)
 	fSplit := strings.Split(*fPath, string(os.PathSeparator))
 	fName := fSplit[len(fSplit)-1]
 	GRLibAST.AppendStub(*fPath, *fPath)
